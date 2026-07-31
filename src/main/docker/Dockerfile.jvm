@@ -1,0 +1,34 @@
+####
+# JVM-mode Dockerfile for firebirdsql-monitoring
+#
+# Build the application first:
+#   ./gradlew build
+#
+# Then build the image:
+#   docker build -f src/main/docker/Dockerfile.jvm -t wolfgangreder/firebirdsql-monitoring:latest .
+#
+# Run the container (set your Firebird credentials via environment variables):
+#   docker run -i --rm -p 8080:8080 \
+#     -e FIREBIRD_JDBC_URL="jdbc:firebird://db-host:3050//data/mydb.fdb" \
+#     -e FIREBIRD_USER=sysdba \
+#     -e FIREBIRD_PASSWORD=secret \
+#     wolfgangreder/firebirdsql-monitoring:latest
+###
+
+FROM registry.access.redhat.com/ubi9/openjdk-17:1.20
+
+ENV LANGUAGE='en_US:en'
+
+# Copy the application artifacts produced by ./gradlew build
+COPY --chown=185 build/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 build/quarkus-app/*.jar /deployments/
+COPY --chown=185 build/quarkus-app/app/ /deployments/app/
+COPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/
+
+EXPOSE 8080
+USER 185
+
+ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
+
+ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
