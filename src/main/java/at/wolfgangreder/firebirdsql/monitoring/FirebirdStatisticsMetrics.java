@@ -66,9 +66,9 @@ public class FirebirdStatisticsMetrics {
         try {
             connectionInfo = JdbcUrlParser.parse(jdbcUrl);
         } catch (IllegalArgumentException ex) {
+            // Preserve stacktrace for easier debugging
             LOGGER.log(Level.SEVERE,
-                "Cannot parse Firebird JDBC URL — statistics collection disabled: {0}",
-                ex.getMessage());
+                "Cannot parse Firebird JDBC URL — statistics collection disabled", ex);
         }
     }
 
@@ -82,12 +82,28 @@ public class FirebirdStatisticsMetrics {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             FBStatisticsManager mgr = createStatisticsManager(connectionInfo);
-            mgr.setLogger(bos);
-            mgr.getDatabaseStatistics(
-                StatisticsManager.DATA_TABLE_STATISTICS
-                | StatisticsManager.INDEX_STATISTICS
-                | StatisticsManager.RECORD_VERSION_STATISTICS);
-            processStatisticsOutput(bos.toByteArray());
+            try {
+                mgr.setLogger(bos);
+                mgr.getDatabaseStatistics(
+                    StatisticsManager.DATA_TABLE_STATISTICS
+                    | StatisticsManager.INDEX_STATISTICS
+                    | StatisticsManager.RECORD_VERSION_STATISTICS);
+                processStatisticsOutput(bos.toByteArray());
+            } finally {
+                try {
+                    // Try to close manager if method exists. Use reflection to avoid
+                    // compile-time dependency on specific API version.
+                    try {
+                        java.lang.reflect.Method closeMethod = mgr.getClass().getMethod("close");
+                        closeMethod.invoke(mgr);
+                    } catch (NoSuchMethodException nsme) {
+                        // Method not present on this version of library; nothing to do.
+                        LOGGER.log(Level.FINER, "FBStatisticsManager.close() not available", nsme);
+                    }
+                } catch (java.lang.reflect.InvocationTargetException | IllegalAccessException reflectEx) {
+                    LOGGER.log(Level.WARNING, "Failed to close FBStatisticsManager", reflectEx);
+                }
+            }
         } catch (IOException | SQLException ex) {
             LOGGER.log(Level.SEVERE, "Failed to collect Firebird statistics", ex);
         }
@@ -139,6 +155,7 @@ public class FirebirdStatisticsMetrics {
     }
 
     private void fetchAndUpdateDbFilePages() {
+        if (connectionInfo == null) return;
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT MON$PAGES FROM MON$DATABASE")) {
