@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,6 +61,8 @@ public class FirebirdStatisticsMetrics {
     volatile FirebirdConnectionInfo connectionInfo;
 
     private final Map<String, Number> values = new ConcurrentHashMap<>();
+    /** Keys of gauges already registered; prevents duplicate Micrometer registrations. */
+    private final Set<String> registeredKeys = ConcurrentHashMap.newKeySet();
 
     @PostConstruct
     void init() {
@@ -119,18 +122,23 @@ public class FirebirdStatisticsMetrics {
         String key = connectionInfo.database() + "_data_dbfile_pages";
         String db  = connectionInfo.database();
         values.put(key, pages);
-        Gauge.builder("data_dbfile_pages",
-                () -> {
-                    Number n = values.get(key);
-                    return n != null ? n.doubleValue() : Double.NaN;
-                })
-            .tag("dbms", "firebirdsql")
-            .tag("database", db)
-            .register(meterRegistry);
+        if (registeredKeys.add(key)) {
+            Gauge.builder("data_dbfile_pages",
+                    () -> {
+                        Number n = values.get(key);
+                        return n != null ? n.doubleValue() : Double.NaN;
+                    })
+                .tag("dbms", "firebirdsql")
+                .tag("database", db)
+                .register(meterRegistry);
+        }
     }
 
     private void registerGauge(ParsedMetric metric) {
         String key = metric.valueKey();
+        if (!registeredKeys.add(key)) {
+            return; // gauge already registered; values map update is sufficient
+        }
         Gauge.Builder<?> builder = Gauge.builder(metric.metricName(),
             () -> {
                 Number n = values.get(key);
