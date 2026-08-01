@@ -82,28 +82,14 @@ public class FirebirdStatisticsMetrics {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             FBStatisticsManager mgr = createStatisticsManager(connectionInfo);
-            try {
-                mgr.setLogger(bos);
-                mgr.getDatabaseStatistics(
-                    StatisticsManager.DATA_TABLE_STATISTICS
-                    | StatisticsManager.INDEX_STATISTICS
-                    | StatisticsManager.RECORD_VERSION_STATISTICS);
-                processStatisticsOutput(bos.toByteArray());
-            } finally {
-                try {
-                    // Try to close manager if method exists. Use reflection to avoid
-                    // compile-time dependency on specific API version.
-                    try {
-                        java.lang.reflect.Method closeMethod = mgr.getClass().getMethod("close");
-                        closeMethod.invoke(mgr);
-                    } catch (NoSuchMethodException nsme) {
-                        // Method not present on this version of library; nothing to do.
-                        LOGGER.log(Level.FINER, "FBStatisticsManager.close() not available", nsme);
-                    }
-                } catch (java.lang.reflect.InvocationTargetException | IllegalAccessException reflectEx) {
-                    LOGGER.log(Level.WARNING, "Failed to close FBStatisticsManager", reflectEx);
-                }
-            }
+            mgr.setLogger(bos);
+            mgr.getDatabaseStatistics(
+                StatisticsManager.DATA_TABLE_STATISTICS
+                | StatisticsManager.INDEX_STATISTICS
+                | StatisticsManager.RECORD_VERSION_STATISTICS);
+            // FBServiceManager opens and closes its service connection per operation;
+            // no explicit close() call is needed or available on this API.
+            processStatisticsOutput(bos.toByteArray());
         } catch (IOException | SQLException ex) {
             LOGGER.log(Level.SEVERE, "Failed to collect Firebird statistics", ex);
         }
