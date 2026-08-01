@@ -1,0 +1,61 @@
+replicaCount: 1
+
+image:
+  repository: wolfgangreder/at.or.reder.firebird-monitoring
+  tag: "1.0-SNAPSHOT"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: firebirdsql-monitoring.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+firebird:
+  jdbcUrl: "jdbc:firebird://firebird:3050//var/lib/firebird/data/monitoring.fdb"
+  user: "sysdba"
+  # password: set via --set firebird.password=... or external Secret
+  password: "CHANGEME"
+  monitoringInterval: "30s"
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+prometheus:
+  scrape: true
+  path: /q/metrics
+  port: "8080"
+
+livenessProbe:
+  httpGet:
+    path: /q/health/live
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /q/health/ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  failureThreshold: 3

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "firebirdsql-monitoring.fullname" . }}
+  labels:
+    {{- include "firebirdsql-monitoring.labels" . | nindent 4 }}
+data:
+  FIREBIRD_JDBC_URL: {{ .Values.firebird.jdbcUrl | quote }}
+  FIREBIRD_USER: {{ .Values.firebird.user | quote }}
+  FIREBIRD_MONITORING_INTERVAL: {{ .Values.firebird.monitoringInterval | quote }}

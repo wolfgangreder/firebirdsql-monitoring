@@ -1,0 +1,67 @@
+services:
+  # firebirdsql-monitoring exporter
+  # Monitors a Firebird database and exposes Prometheus metrics at /q/metrics.
+  # Requires a .env file (not committed) — copy .env.example and fill in FIREBIRD_USER and FIREBIRD_PASSWORD.
+  firebirdsql-monitoring:
+    image: docker.io/wolfgangreder/at.or.reder.firebird-monitoring:latest
+    container_name: firebirdsql-monitoring
+    environment:
+      FIREBIRD_JDBC_URL: ${FIREBIRD_JDBC_URL:-jdbc:firebird://localhost:3050//var/lib/firebird/data/monitoring.fdb}
+      FIREBIRD_USER: ${FIREBIRD_USER:?Set FIREBIRD_USER in .env or environment}
+      FIREBIRD_PASSWORD: ${FIREBIRD_PASSWORD:?Set FIREBIRD_PASSWORD in .env or environment}
+      FIREBIRD_MONITORING_INTERVAL: ${FIREBIRD_MONITORING_INTERVAL:-30s}
+    ports:
+      - "8080:8080"
+    restart: no
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - firebirdsql-monitoring-network
+
+  # Prometheus — scrapes /q/metrics from the firebirdsql-monitoring container.
+  # Start with: docker compose --profile monitoring up -d
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: firebirdsql-monitoring-prometheus
+    profiles:
+      - monitoring
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - firebirdsql-monitoring-network
+    restart: unless-stopped
+
+  # Grafana — dashboards fed by Prometheus.
+  # Start with: docker compose --profile monitoring up -d
+  # Default credentials: admin / admin
+  grafana:
+    image: grafana/grafana:latest
+    container_name: firebirdsql-monitoring-grafana
+    profiles:
+      - monitoring
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - firebirdsql-monitoring-network
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  firebirdsql-monitoring-network:
+    driver: bridge

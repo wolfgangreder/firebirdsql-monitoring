@@ -24,6 +24,7 @@ replay_pid*
 
 # Gradle build outputs
 build/
+config/
 .gradle/
 
 # IDE files
@@ -38,3 +39,6 @@ build/
 
 # Quarkus
 .quarkus/
+
+# Docker / secrets
+.env

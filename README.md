@@ -77,14 +77,14 @@ All settings can be overridden through environment variables:
 
 # Build Docker image
 docker build -f src/main/docker/Dockerfile.jvm \
-  -t wolfgangreder/firebirdsql-monitoring:latest .
+  -t wolfgangreder/at.or.reder.firebird-monitoring:latest .
 
 # Run container
 docker run -p 8080:8080 \
   -e FIREBIRD_JDBC_URL="jdbc:firebird://db-host:3050//data/mydb.fdb" \
   -e FIREBIRD_USER=sysdba \
   -e FIREBIRD_PASSWORD=secret \
-  wolfgangreder/firebirdsql-monitoring:latest
+  wolfgangreder/at.or.reder.firebird-monitoring:latest
 ```
 
 ## Kubernetes

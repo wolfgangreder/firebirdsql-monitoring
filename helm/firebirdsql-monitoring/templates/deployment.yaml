@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "firebirdsql-monitoring.fullname" . }}
+  labels:
+    {{- include "firebirdsql-monitoring.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "firebirdsql-monitoring.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "firebirdsql-monitoring.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- if .Values.prometheus.scrape }}
+        prometheus.io/scrape: "true"
+        prometheus.io/path: {{ .Values.prometheus.path | quote }}
+        prometheus.io/port: {{ .Values.prometheus.port | quote }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "firebirdsql-monitoring.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: FIREBIRD_JDBC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "firebirdsql-monitoring.fullname" . }}
+                  key: FIREBIRD_JDBC_URL
+            - name: FIREBIRD_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "firebirdsql-monitoring.fullname" . }}
+                  key: FIREBIRD_USER
+            - name: FIREBIRD_MONITORING_INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "firebirdsql-monitoring.fullname" . }}
+                  key: FIREBIRD_MONITORING_INTERVAL
+            - name: FIREBIRD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "firebirdsql-monitoring.fullname" . }}
+                  key: FIREBIRD_PASSWORD
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

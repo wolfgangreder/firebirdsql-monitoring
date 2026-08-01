@@ -18,18 +18,20 @@ dependencies {
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-kubernetes'
     implementation 'io.quarkus:quarkus-scheduler'
+    implementation 'io.quarkus:quarkus-container-image-docker'
     implementation "org.firebirdsql.jdbc:jaybird:${jaybirdVersion}"
 
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
 }
 
-group = 'at.wolfgangreder'
-version = '1.0-SNAPSHOT'
+group = 'at.or.reder'
+version = project.property('projectVersion')
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
 compileJava.options.encoding = 'UTF-8'

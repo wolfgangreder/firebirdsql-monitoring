@@ -5,17 +5,17 @@
 #   ./gradlew build
 #
 # Then build the image:
-#   docker build -f src/main/docker/Dockerfile.jvm -t wolfgangreder/firebirdsql-monitoring:latest .
+#   docker build -f src/main/docker/Dockerfile.jvm -t wolfgangreder/at.or.reder.firebird-monitoring:latest .
 #
 # Run the container (set your Firebird credentials via environment variables):
 #   docker run -i --rm -p 8080:8080 \
 #     -e FIREBIRD_JDBC_URL="jdbc:firebird://db-host:3050//data/mydb.fdb" \
 #     -e FIREBIRD_USER=sysdba \
 #     -e FIREBIRD_PASSWORD=secret \
-#     wolfgangreder/firebirdsql-monitoring:latest
+#     wolfgangreder/at.or.reder.firebird-monitoring:latest
 ###
 
-FROM registry.access.redhat.com/ubi9/openjdk-17:1.20
+FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
 
 ENV LANGUAGE='en_US:en'
 
