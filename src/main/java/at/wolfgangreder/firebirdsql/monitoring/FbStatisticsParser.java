@@ -24,9 +24,9 @@ public final class FbStatisticsParser {
     private static final Pattern PAT_HEADER_PAGE =
         Pattern.compile("\\A(\\t*)([^\\t]*?)(\\t*)(\\d+(\\.)?\\d*)");
     private static final Pattern PAT_DATA = Pattern.compile(
-        "\\A(\\s*)(([A-Za-z ]+):\\s*)((\\d+(.?\\d+)?)%?)" +
-        "(,\\s*([A-Za-z ]+):\\s*((\\d+(.?\\d+)?)%?))?" +
-        "(,\\s*([A-Za-z ]+):\\s*((\\d+(.?\\d+)?)%?))?");
+        "\\A(\\s*)(([A-Za-z ]+):\\s*)((\\d+(\\.\\d+)?)%?)" +
+        "(,\\s*([A-Za-z ]+):\\s*((\\d+(\\.\\d+)?)%?))?" +
+        "(,\\s*([A-Za-z ]+):\\s*((\\d+(\\.\\d+)?)%?))?");
     private static final Pattern PAT_DISTRIBUTION =
         Pattern.compile("\\A\\s*\\d{1,2}\\s*-\\s*(\\d{1,2})%\\s*=\\s*(\\d+)");
 
@@ -162,11 +162,11 @@ public final class FbStatisticsParser {
         if (m.matches()) {
             total += processDataEntry(database, objectGroup, objectName,
                 toParamName(m.group(3)), m.group(5), result);
-            if (m.groupCount() > 10 && m.group(8) != null) {
+            if (m.group(8) != null) {
                 total += processDataEntry(database, objectGroup, objectName,
                     toParamName(m.group(8)), m.group(10), result);
             }
-            if (m.groupCount() > 15 && m.group(13) != null) {
+            if (m.group(13) != null) {
                 total += processDataEntry(database, objectGroup, objectName,
                     toParamName(m.group(13)), m.group(15), result);
             }
