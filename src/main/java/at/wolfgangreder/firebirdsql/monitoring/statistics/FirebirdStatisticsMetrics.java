@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * Collects Firebird database statistics via {@code FBStatisticsManager} and exposes them as
@@ -28,6 +29,8 @@ import javax.sql.DataSource;
  *
  * <p>Scheduling interval is controlled by {@code firebird.statistics.interval} (default 1h).
  * Statistics collection is expensive; do not reduce the interval significantly.
+ * Set {@code firebird.statistics.enabled=false} to disable scheduled collection only;
+ * manual collection via the update methods remains possible.
  */
 @ApplicationScoped
 public class FirebirdStatisticsMetrics {
@@ -44,6 +47,9 @@ public class FirebirdStatisticsMetrics {
     @Inject
     MeterRegistry meterRegistry;
 
+    @ConfigProperty(name = "firebird.statistics.enabled", defaultValue = "true")
+    boolean statisticsEnabled;
+
     private final Map<String, Number> values = new ConcurrentHashMap<>();
     /** Keys of gauges already registered; prevents duplicate Micrometer registrations. */
     private final Set<String> registeredKeys = ConcurrentHashMap.newKeySet();
@@ -54,7 +60,12 @@ public class FirebirdStatisticsMetrics {
      */
     @Scheduled(every = "${firebird.statistics.interval:1h}")
     void collectStatistics() {
-        if (!fetcher.isConfigured()) return;
+        if (!statisticsEnabled) {
+            return;
+        }
+        if (!fetcher.isConfigured()) {
+            return;
+        }
         try {
             processStatisticsOutput(fetcher.fetchStatistics());
         } catch (IOException | SQLException ex) {
@@ -69,7 +80,9 @@ public class FirebirdStatisticsMetrics {
      * network connection to Firebird.
      */
     void processStatisticsOutput(byte[] data) throws IOException {
-        if (!fetcher.isConfigured()) return;
+        if (!fetcher.isConfigured()) {
+            return;
+        }
         List<ParsedMetric> metrics = FbStatisticsParser.parse(fetcher.database(), data);
         for (ParsedMetric m : metrics) {
             values.put(m.valueKey(), m.value());
@@ -82,7 +95,9 @@ public class FirebirdStatisticsMetrics {
      * Package-private so tests can call it directly without a DataSource connection.
      */
     void updateDbFilePages(long pages) {
-        if (!fetcher.isConfigured()) return;
+        if (!fetcher.isConfigured()) {
+            return;
+        }
         String key = fetcher.database() + "_data_dbfile_pages";
         String db  = fetcher.database();
         values.put(key, pages);
@@ -113,7 +128,9 @@ public class FirebirdStatisticsMetrics {
     }
 
     private void fetchAndUpdateDbFilePages() {
-        if (!fetcher.isConfigured()) return;
+        if (!fetcher.isConfigured()) {
+            return;
+        }
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT MON$PAGES FROM MON$DATABASE")) {

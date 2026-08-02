@@ -7,6 +7,7 @@ import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -19,6 +20,12 @@ import java.util.logging.Logger;
 /**
  * Collects Firebird database metrics from the MON$ monitoring tables
  * and exposes them as Micrometer gauges for Prometheus scraping.
+ *
+ * <p>Each section (connections, transactions, statements, io, memory) can be
+ * independently enabled or disabled via config properties. Disabled sections
+ * register no gauges and perform no scheduled DB queries. On-demand REST
+ * endpoints in {@link MonitoringResource} are unaffected by these flags and
+ * never touch the registered gauges.
  */
 @ApplicationScoped
 public class FirebirdDatabaseMetrics {
@@ -31,30 +38,80 @@ public class FirebirdDatabaseMetrics {
     @Inject
     MeterRegistry registry;
 
+    // -------------------------------------------------------------------------
+    // Per-section switches
+    // -------------------------------------------------------------------------
+
+    @ConfigProperty(name = "firebird.monitoring.connections.enabled", defaultValue = "true")
+    boolean connectionsEnabled;
+
+    @ConfigProperty(name = "firebird.monitoring.transactions.enabled", defaultValue = "true")
+    boolean transactionsEnabled;
+
+    @ConfigProperty(name = "firebird.monitoring.statements.enabled", defaultValue = "true")
+    boolean statementsEnabled;
+
+    @ConfigProperty(name = "firebird.monitoring.io.enabled", defaultValue = "true")
+    boolean ioEnabled;
+
+    @ConfigProperty(name = "firebird.monitoring.memory.enabled", defaultValue = "true")
+    boolean memoryEnabled;
+
+    // -------------------------------------------------------------------------
+    // Gauge backing values
+    // -------------------------------------------------------------------------
+
     private final AtomicLong activeConnections = new AtomicLong(0);
     private final AtomicLong activeTransactions = new AtomicLong(0);
-    private final AtomicLong activeStatements = new AtomicLong(0);
-    private final AtomicLong pageFetches = new AtomicLong(0);
-    private final AtomicLong pageReads = new AtomicLong(0);
-    private final AtomicLong pageWrites = new AtomicLong(0);
-    private final AtomicLong pageMarks = new AtomicLong(0);
-    private final AtomicLong memoryUsed = new AtomicLong(0);
-    private final AtomicLong memoryAllocated = new AtomicLong(0);
+    private final AtomicLong activeStatements  = new AtomicLong(0);
+    private final AtomicLong pageFetches       = new AtomicLong(0);
+    private final AtomicLong pageReads         = new AtomicLong(0);
+    private final AtomicLong pageWrites        = new AtomicLong(0);
+    private final AtomicLong pageMarks         = new AtomicLong(0);
+    private final AtomicLong memoryUsed        = new AtomicLong(0);
+    private final AtomicLong memoryAllocated   = new AtomicLong(0);
+
+    // -------------------------------------------------------------------------
+    // Startup – register gauges for enabled sections only
+    // -------------------------------------------------------------------------
 
     void onStart(@Observes StartupEvent ev) {
-        registerGauges();
+        if (connectionsEnabled) {
+            registerConnectionGauges();
+        }
+        if (transactionsEnabled) {
+            registerTransactionGauges();
+        }
+        if (statementsEnabled) {
+            registerStatementGauges();
+        }
+        if (ioEnabled) {
+            registerIoGauges();
+        }
+        if (memoryEnabled) {
+            registerMemoryGauges();
+        }
     }
 
-    private void registerGauges() {
+    private void registerConnectionGauges() {
         Gauge.builder("firebird.connections.active", activeConnections, AtomicLong::get)
                 .description("Number of active database connections (excluding monitoring connection)")
                 .register(registry);
+    }
+
+    private void registerTransactionGauges() {
         Gauge.builder("firebird.transactions.active", activeTransactions, AtomicLong::get)
                 .description("Number of active transactions")
                 .register(registry);
+    }
+
+    private void registerStatementGauges() {
         Gauge.builder("firebird.statements.active", activeStatements, AtomicLong::get)
                 .description("Number of active statements in other connections")
                 .register(registry);
+    }
+
+    private void registerIoGauges() {
         Gauge.builder("firebird.io.page_fetches", pageFetches, AtomicLong::get)
                 .description("Total number of page fetches at database level")
                 .baseUnit("pages")
@@ -71,6 +128,9 @@ public class FirebirdDatabaseMetrics {
                 .description("Total number of dirty (marked) pages at database level")
                 .baseUnit("pages")
                 .register(registry);
+    }
+
+    private void registerMemoryGauges() {
         Gauge.builder("firebird.memory.used_bytes", memoryUsed, AtomicLong::get)
                 .description("Memory currently in use by the database engine")
                 .baseUnit("bytes")
@@ -81,14 +141,32 @@ public class FirebirdDatabaseMetrics {
                 .register(registry);
     }
 
+    // -------------------------------------------------------------------------
+    // Scheduled collection – only enabled sections query the DB
+    // -------------------------------------------------------------------------
+
     @Scheduled(every = "${firebird.monitoring.interval:30s}")
     void collectMetrics() {
+        if (!connectionsEnabled && !transactionsEnabled && !statementsEnabled
+                && !ioEnabled && !memoryEnabled) {
+            return;
+        }
         try (Connection conn = dataSource.getConnection()) {
-            collectConnectionStats(conn);
-            collectTransactionStats(conn);
-            collectStatementStats(conn);
-            collectIoStats(conn);
-            collectMemoryStats(conn);
+            if (connectionsEnabled) {
+                collectConnectionStats(conn);
+            }
+            if (transactionsEnabled) {
+                collectTransactionStats(conn);
+            }
+            if (statementsEnabled) {
+                collectStatementStats(conn);
+            }
+            if (ioEnabled) {
+                collectIoStats(conn);
+            }
+            if (memoryEnabled) {
+                collectMemoryStats(conn);
+            }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failed to collect Firebird metrics: {0}", e.getMessage());
         }

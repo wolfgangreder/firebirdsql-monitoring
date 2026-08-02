@@ -25,6 +25,7 @@ replay_pid*
 # Gradle build outputs
 build/
 config/
+docs/
 .gradle/
 
 # IDE files

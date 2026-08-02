@@ -42,7 +42,14 @@ All settings can be overridden through environment variables:
 | `FIREBIRD_JDBC_URL` | `jdbc:firebird://localhost:3050//var/lib/firebird/data/monitoring.fdb` | Jaybird JDBC URL |
 | `FIREBIRD_USER` | `sysdba` | Database user |
 | `FIREBIRD_PASSWORD` | `masterkey` | Database credential |
-| `FIREBIRD_MONITORING_INTERVAL` | `30s` | Collection interval (ISO-8601 duration or `Ns`) |
+| `FIREBIRD_MONITORING_INTERVAL` | `30s` | MON$ gauge collection interval (ISO-8601 or `Ns`) |
+| `FIREBIRD_MONITORING_CONNECTIONS_ENABLED` | `true` | Enable/disable scheduled connections gauge collection |
+| `FIREBIRD_MONITORING_TRANSACTIONS_ENABLED` | `true` | Enable/disable scheduled transactions gauge collection |
+| `FIREBIRD_MONITORING_STATEMENTS_ENABLED` | `true` | Enable/disable scheduled statements gauge collection |
+| `FIREBIRD_MONITORING_IO_ENABLED` | `true` | Enable/disable scheduled IO gauge collection |
+| `FIREBIRD_MONITORING_MEMORY_ENABLED` | `true` | Enable/disable scheduled memory gauge collection |
+| `FIREBIRD_STATISTICS_INTERVAL` | `1h` | Statistics collection interval — keep at 1h or longer |
+| `FIREBIRD_STATISTICS_ENABLED` | `true` | Enable/disable scheduled statistics collection (manual `/statistics` always available) |
 
 ## REST API
 

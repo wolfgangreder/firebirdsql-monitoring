@@ -35,7 +35,9 @@ public final class FbStatisticsParser {
 
     public static List<ParsedMetric> parse(String database, byte[] data) throws IOException {
         List<ParsedMetric> result = new ArrayList<>();
-        if (data == null || data.length == 0) return result;
+        if (data == null || data.length == 0) {
+            return result;
+        }
 
         try (LineNumberReader reader = new LineNumberReader(
                 new InputStreamReader(new ByteArrayInputStream(data), StandardCharsets.UTF_8))) {
@@ -50,7 +52,9 @@ public final class FbStatisticsParser {
             boolean hasMore = true;
             while (hasMore) {
                 String objectName = reader.readLine();
-                if (objectName == null) break;
+                if (objectName == null) {
+                    break;
+                }
 
                 int indexPos = objectName.indexOf("Index ");
                 if (indexPos > 0) {
@@ -80,7 +84,9 @@ public final class FbStatisticsParser {
 
     private static void parseHeaderPage(String database, LineNumberReader reader,
                                          List<ParsedMetric> result) throws IOException {
-        if (!forwardToLine(reader, "Database header page information:")) return;
+        if (!forwardToLine(reader, "Database header page information:")) {
+            return;
+        }
         String line = reader.readLine();
         while (line != null && !line.isBlank()) {
             Matcher m = PAT_HEADER_PAGE.matcher(line);
