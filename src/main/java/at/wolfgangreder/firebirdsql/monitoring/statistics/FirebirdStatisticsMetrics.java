@@ -1,19 +1,11 @@
-package at.wolfgangreder.firebirdsql.monitoring;
+package at.wolfgangreder.firebirdsql.monitoring.statistics;
 
+import at.wolfgangreder.firebirdsql.monitoring.ParsedMetric;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.scheduler.Scheduled;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
-import org.firebirdsql.management.FBStatisticsManager;
-import org.firebirdsql.management.StatisticsManager;
-
-import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -25,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.DataSource;
 
 /**
  * Collects Firebird database statistics via {@code FBStatisticsManager} and exposes them as
@@ -42,14 +35,8 @@ public class FirebirdStatisticsMetrics {
     private static final Logger LOGGER =
         Logger.getLogger(FirebirdStatisticsMetrics.class.getName());
 
-    @ConfigProperty(name = "quarkus.datasource.jdbc.url")
-    String jdbcUrl;
-
-    @ConfigProperty(name = "quarkus.datasource.username")
-    String username;
-
-    @ConfigProperty(name = "quarkus.datasource.password")
-    String password;
+    @Inject
+    FirebirdStatisticsFetcher fetcher;
 
     @Inject
     DataSource dataSource;
@@ -57,23 +44,9 @@ public class FirebirdStatisticsMetrics {
     @Inject
     MeterRegistry meterRegistry;
 
-    // Package-private to allow direct inspection in tests.
-    volatile FirebirdConnectionInfo connectionInfo;
-
     private final Map<String, Number> values = new ConcurrentHashMap<>();
     /** Keys of gauges already registered; prevents duplicate Micrometer registrations. */
     private final Set<String> registeredKeys = ConcurrentHashMap.newKeySet();
-
-    @PostConstruct
-    void init() {
-        try {
-            connectionInfo = JdbcUrlParser.parse(jdbcUrl);
-        } catch (IllegalArgumentException ex) {
-            // Preserve stacktrace for easier debugging
-            LOGGER.log(Level.SEVERE,
-                "Cannot parse Firebird JDBC URL — statistics collection disabled", ex);
-        }
-    }
 
     /**
      * Hourly collection trigger. Fetches statistics via {@code FBStatisticsManager} and
@@ -81,18 +54,9 @@ public class FirebirdStatisticsMetrics {
      */
     @Scheduled(every = "${firebird.statistics.interval:1h}")
     void collectStatistics() {
-        if (connectionInfo == null) return;
+        if (!fetcher.isConfigured()) return;
         try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            FBStatisticsManager mgr = createStatisticsManager(connectionInfo);
-            mgr.setLogger(bos);
-            mgr.getDatabaseStatistics(
-                StatisticsManager.DATA_TABLE_STATISTICS
-                | StatisticsManager.INDEX_STATISTICS
-                | StatisticsManager.RECORD_VERSION_STATISTICS);
-            // FBServiceManager opens and closes its service connection per operation;
-            // no explicit close() call is needed or available on this API.
-            processStatisticsOutput(bos.toByteArray());
+            processStatisticsOutput(fetcher.fetchStatistics());
         } catch (IOException | SQLException ex) {
             LOGGER.log(Level.SEVERE, "Failed to collect Firebird statistics", ex);
         }
@@ -105,8 +69,8 @@ public class FirebirdStatisticsMetrics {
      * network connection to Firebird.
      */
     void processStatisticsOutput(byte[] data) throws IOException {
-        if (connectionInfo == null) return;
-        List<ParsedMetric> metrics = FbStatisticsParser.parse(connectionInfo.database(), data);
+        if (!fetcher.isConfigured()) return;
+        List<ParsedMetric> metrics = FbStatisticsParser.parse(fetcher.database(), data);
         for (ParsedMetric m : metrics) {
             values.put(m.valueKey(), m.value());
             registerGauge(m);
@@ -118,9 +82,9 @@ public class FirebirdStatisticsMetrics {
      * Package-private so tests can call it directly without a DataSource connection.
      */
     void updateDbFilePages(long pages) {
-        if (connectionInfo == null) return;
-        String key = connectionInfo.database() + "_data_dbfile_pages";
-        String db  = connectionInfo.database();
+        if (!fetcher.isConfigured()) return;
+        String key = fetcher.database() + "_data_dbfile_pages";
+        String db  = fetcher.database();
         values.put(key, pages);
         if (registeredKeys.add(key)) {
             Gauge.builder("data_dbfile_pages",
@@ -149,7 +113,7 @@ public class FirebirdStatisticsMetrics {
     }
 
     private void fetchAndUpdateDbFilePages() {
-        if (connectionInfo == null) return;
+        if (!fetcher.isConfigured()) return;
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT MON$PAGES FROM MON$DATABASE")) {
@@ -160,17 +124,5 @@ public class FirebirdStatisticsMetrics {
             LOGGER.log(Level.SEVERE,
                 "Failed to collect data_dbfile_pages from MON$DATABASE", ex);
         }
-    }
-
-    private FBStatisticsManager createStatisticsManager(FirebirdConnectionInfo info) {
-        FBStatisticsManager mgr = new FBStatisticsManager(
-            GDSType.getType(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME));
-        mgr.setCharSet("UTF-8");
-        mgr.setUser(username);
-        mgr.setPassword(password);
-        mgr.setServerName(info.host());
-        mgr.setPortNumber(info.port());
-        mgr.setDatabase(info.database());
-        return mgr;
     }
 }

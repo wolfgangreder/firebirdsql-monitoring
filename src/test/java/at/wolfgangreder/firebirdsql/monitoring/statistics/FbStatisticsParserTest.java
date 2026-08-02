@@ -1,14 +1,13 @@
-package at.wolfgangreder.firebirdsql.monitoring;
+package at.wolfgangreder.firebirdsql.monitoring.statistics;
 
-import org.junit.jupiter.api.Test;
-
+import at.wolfgangreder.firebirdsql.monitoring.ParsedMetric;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class FbStatisticsParserTest {
 

@@ -1,15 +1,13 @@
-package at.wolfgangreder.firebirdsql.monitoring;
+package at.wolfgangreder.firebirdsql.monitoring.statistics;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 class FirebirdStatisticsMetricsTest {
