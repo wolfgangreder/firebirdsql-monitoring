@@ -1,5 +1,7 @@
-package at.wolfgangreder.firebirdsql.monitoring;
+package at.or.reder.firebirdsql.monitoring;
 
+import at.or.reder.firebirdsql.monitoring.JdbcUrlParser;
+import at.or.reder.firebirdsql.monitoring.FirebirdConnectionInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

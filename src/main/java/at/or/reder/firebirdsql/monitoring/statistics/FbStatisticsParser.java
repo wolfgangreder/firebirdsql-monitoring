@@ -1,6 +1,6 @@
-package at.wolfgangreder.firebirdsql.monitoring.statistics;
+package at.or.reder.firebirdsql.monitoring.statistics;
 
-import at.wolfgangreder.firebirdsql.monitoring.ParsedMetric;
+import at.or.reder.firebirdsql.monitoring.ParsedMetric;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;

@@ -1,4 +1,4 @@
-package at.wolfgangreder.firebirdsql.monitoring;
+package at.or.reder.firebirdsql.monitoring;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

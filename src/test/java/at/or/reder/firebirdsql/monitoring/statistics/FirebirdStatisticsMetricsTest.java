@@ -1,5 +1,6 @@
-package at.wolfgangreder.firebirdsql.monitoring.statistics;
+package at.or.reder.firebirdsql.monitoring.statistics;
 
+import at.or.reder.firebirdsql.monitoring.statistics.FirebirdStatisticsMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;

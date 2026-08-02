@@ -1,4 +1,4 @@
-package at.wolfgangreder.firebirdsql.monitoring;
+package at.or.reder.firebirdsql.monitoring;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;

@@ -1,5 +1,6 @@
-package at.wolfgangreder.firebirdsql.monitoring.statistics;
+package at.or.reder.firebirdsql.monitoring.statistics;
 
+import at.or.reder.firebirdsql.monitoring.statistics.FirebirdStatisticsFetcher;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;

@@ -1,6 +1,7 @@
-package at.wolfgangreder.firebirdsql.monitoring.statistics;
+package at.or.reder.firebirdsql.monitoring.statistics;
 
-import at.wolfgangreder.firebirdsql.monitoring.ParsedMetric;
+import at.or.reder.firebirdsql.monitoring.statistics.FbStatisticsParser;
+import at.or.reder.firebirdsql.monitoring.ParsedMetric;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;

@@ -1,7 +1,7 @@
-package at.wolfgangreder.firebirdsql.monitoring.statistics;
+package at.or.reder.firebirdsql.monitoring.statistics;
 
-import at.wolfgangreder.firebirdsql.monitoring.FirebirdConnectionInfo;
-import at.wolfgangreder.firebirdsql.monitoring.JdbcUrlParser;
+import at.or.reder.firebirdsql.monitoring.FirebirdConnectionInfo;
+import at.or.reder.firebirdsql.monitoring.JdbcUrlParser;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.ByteArrayOutputStream;

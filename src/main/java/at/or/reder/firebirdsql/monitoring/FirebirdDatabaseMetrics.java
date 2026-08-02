@@ -1,4 +1,4 @@
-package at.wolfgangreder.firebirdsql.monitoring;
+package at.or.reder.firebirdsql.monitoring;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;

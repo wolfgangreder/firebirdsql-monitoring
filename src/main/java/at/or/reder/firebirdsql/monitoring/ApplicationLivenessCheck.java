@@ -1,4 +1,4 @@
-package at.wolfgangreder.firebirdsql.monitoring;
+package at.or.reder.firebirdsql.monitoring;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.health.HealthCheck;
