@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firebirdsql-monitoring
+  namespace: <replace-with-namespace>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: firebirdsql-monitoring
+  template:
+    metadata:
+      labels:
+        app: firebirdsql-monitoring
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /q/metrics
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: firebirdsql-monitoring
+          image: wolfgangreder/at.or.reder.firebird-monitoring:<replace-with-tag>
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: firebirdsql-monitoring
+            - secretRef:
+                name: firebirdsql-monitoring
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: firebirdsql-monitoring
+  namespace: <replace-with-namespace>
+spec:
+  selector:
+    app: firebirdsql-monitoring
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      name: http

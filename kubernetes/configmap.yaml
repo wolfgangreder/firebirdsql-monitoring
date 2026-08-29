@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: firebirdsql-monitoring
+  namespace: <replace-with-namespace>
+data:
+  FIREBIRD_JDBC_URL: "jdbc:firebird://<replace-with-host>:3050//<replace-with-db-path>"
+  FIREBIRD_USER: "<replace-with-db-user>"
+  FIREBIRD_MONITORING_INTERVAL: "30s"
+  # Section enable flags — set to "false" to disable a section
+  FIREBIRD_MONITORING_CONNECTIONS_ENABLED: "true"
+  FIREBIRD_MONITORING_TRANSACTIONS_ENABLED: "true"
+  FIREBIRD_MONITORING_STATEMENTS_ENABLED: "true"
+  FIREBIRD_MONITORING_IO_ENABLED: "true"
+  FIREBIRD_MONITORING_MEMORY_ENABLED: "true"
+  FIREBIRD_STATISTICS_ENABLED: "true"
+  FIREBIRD_STATISTICS_INTERVAL: "1h"

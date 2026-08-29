@@ -1,0 +1,22 @@
+# Example Helm values override
+# Copy this file, fill in your values, then:
+#   helm upgrade --install firebirdsql-monitoring helm/firebirdsql-monitoring \
+#     -f my-values.yaml --namespace <your-namespace> --create-namespace
+
+image:
+  tag: "<replace-with-tag>"   # see https://hub.docker.com/r/wolfgangreder/at.or.reder.firebird-monitoring/tags
+
+firebird:
+  jdbcUrl: "jdbc:firebird://<replace-with-host>:3050//<replace-with-db-path>"
+  user: "<replace-with-db-user>"
+  password: "<replace-with-password>"    # use --set firebird.password=... to avoid committing secrets
+  monitoringInterval: "30s"
+
+ingress:
+  enabled: true
+  className: "<replace-with-ingressclass>"   # e.g. nginx, traefik
+  hosts:
+    - host: "<replace-with-hostname>"
+      paths:
+        - path: /
+          pathType: Prefix
