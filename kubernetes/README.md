@@ -28,7 +28,7 @@ Paste result into `secret.yaml` → `FIREBIRD_PASSWORD`.
 Set `FIREBIRD_JDBC_URL` to your Firebird JDBC URL, e.g.:
 
 ```
-jdbc:firebird://firebird-host:3050//var/lib/firebird/data/mydb.fdb
+jdbc:firebird://<replace-with-host>:<replace-with-port>//<replace-with-db-path>
 ```
 
 Disable sections you don't need by setting the flag to `"false"`:
