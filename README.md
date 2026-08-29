@@ -1,103 +1,88 @@
-# firebirdsql-monitoring
+# Firebird SQL Prometheus Exporter
 
-A Kubernetes/container-friendly Quarkus application that monitors a [Firebird SQL](https://firebirdsql.org/) database and exposes metrics via [Micrometer](https://micrometer.io/) / Prometheus.
+> Prometheus / Micrometer metrics exporter for [Firebird SQL](https://firebirdsql.org/) — Kubernetes-ready, built with [Quarkus](https://quarkus.io/).
 
-## Features
+[![Docker Hub](https://img.shields.io/docker/v/wolfgangreder/at.or.reder.firebird-monitoring?label=Docker%20Hub)](https://hub.docker.com/r/wolfgangreder/at.or.reder.firebird-monitoring)
+[![License](https://img.shields.io/github/license/wolfgangreder/firebirdsql-monitoring)](LICENSE)
 
-- **Firebird SQL monitoring** – queries `MON$ATTACHMENTS`, `MON$TRANSACTIONS`, `MON$STATEMENTS`, `MON$IO_STATS`, and `MON$MEMORY_USAGE` to expose live database health data.
-- **Micrometer / Prometheus metrics** – all collected statistics are exposed as gauges on the `/q/metrics` endpoint.
-- **SmallRye Health probes** – dedicated liveness (`/q/health/live`) and readiness (`/q/health/ready`) endpoints for Kubernetes.
-- **Kubernetes manifests** – generated automatically by the `quarkus-kubernetes` extension during `./gradlew build`.
-- **Container-ready** – JVM-mode `Dockerfile.jvm` included; build output targets a minimal OCI image.
-- **Gradle Groovy** build system.
-
-## Prerequisites
-
-| Tool | Version |
-|------|---------|
-| JDK  | 17+     |
-| Gradle | 9.x (wrapper included) |
-| Firebird SQL | 3.x / 4.x / 5.x |
+Scrapes Firebird's `MON$` monitoring tables and exposes the data as Prometheus gauges on `/q/metrics`. Supports Firebird 3.x / 4.x / 5.x.
 
 ## Quick start
 
 ```bash
-# Clone and build
-git clone https://github.com/wolfgangreder/firebirdsql-monitoring.git
-cd firebirdsql-monitoring
-./gradlew build
-
-# Run in dev mode (live reload)
-./gradlew quarkusDev \
-  -Dquarkus.datasource.jdbc.url="jdbc:firebird://<replace-with-host>:<replace-with-port>//<replace-with-db-path>" \
-  -Dquarkus.datasource.username=sysdba
-```
-
-## Configuration
-
-All settings can be overridden through environment variables:
-
-| Environment variable | Default | Description |
-|---|---|---|
-| `FIREBIRD_JDBC_URL` | `jdbc:firebird://<host>:<port>//<db-path>` | Jaybird JDBC URL |
-| `FIREBIRD_USER` | `sysdba` | Database user |
-| `FIREBIRD_PASSWORD` | `masterkey` | Database credential |
-| `FIREBIRD_MONITORING_INTERVAL` | `30s` | MON$ gauge collection interval (ISO-8601 or `Ns`) |
-| `FIREBIRD_MONITORING_CONNECTIONS_ENABLED` | `true` | Enable/disable scheduled connections gauge collection |
-| `FIREBIRD_MONITORING_TRANSACTIONS_ENABLED` | `true` | Enable/disable scheduled transactions gauge collection |
-| `FIREBIRD_MONITORING_STATEMENTS_ENABLED` | `true` | Enable/disable scheduled statements gauge collection |
-| `FIREBIRD_MONITORING_IO_ENABLED` | `true` | Enable/disable scheduled IO gauge collection |
-| `FIREBIRD_MONITORING_MEMORY_ENABLED` | `true` | Enable/disable scheduled memory gauge collection |
-| `FIREBIRD_STATISTICS_INTERVAL` | `1h` | Statistics collection interval — keep at 1h or longer |
-| `FIREBIRD_STATISTICS_ENABLED` | `true` | Enable/disable scheduled statistics collection (manual `/statistics` always available) |
-
-## REST API
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/monitoring/database` | General database info from `MON$DATABASE` |
-| GET | `/monitoring/connections` | Active connections from `MON$ATTACHMENTS` |
-| GET | `/monitoring/transactions` | Active transactions from `MON$TRANSACTIONS` |
-| GET | `/q/metrics` | Prometheus-formatted metrics |
-| GET | `/q/health/live` | Kubernetes liveness probe |
-| GET | `/q/health/ready` | Kubernetes readiness probe |
-
-## Exposed Metrics
-
-| Metric name | Description |
-|---|---|
-| `firebird_connections_active` | Active connections (excl. monitoring connection) |
-| `firebird_transactions_active` | Active transactions |
-| `firebird_statements_active` | Active statements in other connections |
-| `firebird_io_page_fetches_pages` | Page fetches (database level) |
-| `firebird_io_page_reads_pages` | Page reads from disk (database level) |
-| `firebird_io_page_writes_pages` | Page writes to disk (database level) |
-| `firebird_io_page_marks_pages` | Dirty pages (database level) |
-| `firebird_memory_used_bytes` | Memory in use by the engine |
-| `firebird_memory_allocated_bytes` | Memory allocated by the engine |
-
-## Container build
-
-```bash
-# Build application
-./gradlew build
-
-# Build Docker image
-docker build -f src/main/docker/Dockerfile.jvm \
-  -t wolfgangreder/at.or.reder.firebird-monitoring:latest .
-
-# Run container
 docker run -p 8080:8080 \
-  -e FIREBIRD_JDBC_URL="jdbc:firebird://<replace-with-host>:<replace-with-port>//<replace-with-db-path>" \
+  -e FIREBIRD_JDBC_URL="jdbc:firebird://<host>:<port>//<db-path>" \
   -e FIREBIRD_USER=sysdba \
-  -e FIREBIRD_PASSWORD=secret \
+  -e FIREBIRD_PASSWORD=<password> \
   wolfgangreder/at.or.reder.firebird-monitoring:latest
 ```
 
+Metrics: `http://localhost:8080/q/metrics`
+
+## Exposed metrics
+
+| Metric | Description |
+|---|---|
+| `firebird_connections_active` | Active connections |
+| `firebird_transactions_active` | Active transactions |
+| `firebird_statements_active` | Active statements |
+| `firebird_io_page_fetches_pages` | Page fetches |
+| `firebird_io_page_reads_pages` | Page reads from disk |
+| `firebird_io_page_writes_pages` | Page writes to disk |
+| `firebird_io_page_marks_pages` | Dirty pages |
+| `firebird_memory_used_bytes` | Memory in use |
+| `firebird_memory_allocated_bytes` | Memory allocated |
+
+Statistics metrics (`headerpage_*`, `data_*`, `index_*`) collected separately on a slower interval.
+
+## Configuration
+
+| Environment variable | Default | Description |
+|---|---|---|
+| `FIREBIRD_JDBC_URL` | — | Jaybird JDBC URL |
+| `FIREBIRD_USER` | `sysdba` | Database user |
+| `FIREBIRD_PASSWORD` | — | Database password |
+| `FIREBIRD_MONITORING_INTERVAL` | `30s` | MON$ scrape interval |
+| `FIREBIRD_MONITORING_CONNECTIONS_ENABLED` | `true` | Collect connections |
+| `FIREBIRD_MONITORING_TRANSACTIONS_ENABLED` | `true` | Collect transactions |
+| `FIREBIRD_MONITORING_STATEMENTS_ENABLED` | `true` | Collect statements |
+| `FIREBIRD_MONITORING_IO_ENABLED` | `true` | Collect I/O stats |
+| `FIREBIRD_MONITORING_MEMORY_ENABLED` | `true` | Collect memory stats |
+| `FIREBIRD_STATISTICS_ENABLED` | `true` | Collect DB statistics |
+| `FIREBIRD_STATISTICS_INTERVAL` | `1h` | Statistics scrape interval |
+
+## REST API
+
+| Path | Description |
+|---|---|
+| `GET /q/metrics` | Prometheus metrics |
+| `GET /q/health/live` | Liveness probe |
+| `GET /q/health/ready` | Readiness probe |
+| `GET /monitoring/database` | DB info (JSON) |
+| `GET /monitoring/connections` | Active connections (JSON) |
+| `GET /monitoring/transactions` | Active transactions (JSON) |
+
 ## Kubernetes / Helm
 
-See [`kubernetes/README.md`](kubernetes/README.md) for plain kubectl and Helm deployment instructions, template files, and configuration reference.
+See [`kubernetes/README.md`](kubernetes/README.md) — includes plain kubectl manifests, Helm chart, and template config files.
+
+## Build from source
+
+**Prerequisites:** JDK 25+, Gradle wrapper included.
+
+```bash
+./gradlew build
+
+# dev mode (live reload)
+./gradlew quarkusDev \
+  -Dquarkus.datasource.jdbc.url="jdbc:firebird://<host>:<port>//<db-path>" \
+  -Dquarkus.datasource.username=sysdba
+
+# build container image
+docker build -f src/main/docker/Dockerfile.jvm \
+  -t wolfgangreder/at.or.reder.firebird-monitoring:latest .
+```
 
 ## License
 
-See [LICENSE](LICENSE).
+[LICENSE](LICENSE)
