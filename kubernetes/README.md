@@ -25,12 +25,6 @@ Paste result into `secret.yaml` → `FIREBIRD_PASSWORD`.
 
 ### configmap.yaml
 
-Set `FIREBIRD_JDBC_URL` to your Firebird JDBC URL, e.g.:
-
-```
-jdbc:firebird://<replace-with-host>:<replace-with-port>//<replace-with-db-path>
-```
-
 Disable sections you don't need by setting the flag to `"false"`:
 
 | Flag | Default | Collects |
@@ -40,7 +34,8 @@ Disable sections you don't need by setting the flag to `"false"`:
 | `FIREBIRD_MONITORING_STATEMENTS_ENABLED` | `true` | active statements |
 | `FIREBIRD_MONITORING_IO_ENABLED` | `true` | page I/O stats |
 | `FIREBIRD_MONITORING_MEMORY_ENABLED` | `true` | memory usage |
-| `FIREBIRD_STATISTICS_ENABLED` | `true` | full DB statistics (expensive, default 1h) |
+| `FIREBIRD_STATISTICS_ENABLED` | `true` | full DB statistics (expensive) |
+| `FIREBIRD_STATISTICS_INTERVAL` | `1h` | statistics collection interval |
 
 ---
 
@@ -67,7 +62,7 @@ Pass `--set firebird.password=...` on the command line to avoid storing the pass
 
 | Key | Default | Description |
 |---|---|---|
-| `image.tag` | `1.0-SNAPSHOT` | Container image tag |
+| `image.tag` | `0.3.2-SNAPSHOT` | Container image tag |
 | `firebird.jdbcUrl` | see values.yaml | Jaybird JDBC URL |
 | `firebird.user` | `sysdba` | DB user |
 | `firebird.password` | `CHANGEME` | DB password — always override |

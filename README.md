@@ -94,21 +94,9 @@ docker run -p 8080:8080 \
   wolfgangreder/at.or.reder.firebird-monitoring:latest
 ```
 
-## Kubernetes
+## Kubernetes / Helm
 
-After `./gradlew build`, the Kubernetes manifest is generated at:
-
-```
-build/kubernetes/kubernetes.yml
-```
-
-Apply it with:
-
-```bash
-kubectl apply -f build/kubernetes/kubernetes.yml
-```
-
-Set database credentials via a Kubernetes Secret and reference them with `envFrom`.
+See [`kubernetes/README.md`](kubernetes/README.md) for plain kubectl and Helm deployment instructions, template files, and configuration reference.
 
 ## License
 
