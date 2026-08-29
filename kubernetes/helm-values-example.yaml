@@ -7,7 +7,7 @@ image:
   tag: "<replace-with-tag>"   # see https://hub.docker.com/r/wolfgangreder/at.or.reder.firebird-monitoring/tags
 
 firebird:
-  jdbcUrl: "jdbc:firebird://<replace-with-host>:3050//<replace-with-db-path>"
+  jdbcUrl: "jdbc:firebird://<replace-with-host>:<replace-with-port>//<replace-with-db-path>"
   user: "<replace-with-db-user>"
   password: "<replace-with-password>"    # use --set firebird.password=... to avoid committing secrets
   monitoringInterval: "30s"

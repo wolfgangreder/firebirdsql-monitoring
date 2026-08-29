@@ -29,7 +29,7 @@ cd firebirdsql-monitoring
 
 # Run in dev mode (live reload)
 ./gradlew quarkusDev \
-  -Dquarkus.datasource.jdbc.url="jdbc:firebird://localhost:3050//var/lib/firebird/data/mydb.fdb" \
+  -Dquarkus.datasource.jdbc.url="jdbc:firebird://<replace-with-host>:<replace-with-port>//<replace-with-db-path>" \
   -Dquarkus.datasource.username=sysdba
 ```
 
@@ -39,7 +39,7 @@ All settings can be overridden through environment variables:
 
 | Environment variable | Default | Description |
 |---|---|---|
-| `FIREBIRD_JDBC_URL` | `jdbc:firebird://localhost:3050//var/lib/firebird/data/monitoring.fdb` | Jaybird JDBC URL |
+| `FIREBIRD_JDBC_URL` | `jdbc:firebird://<host>:<port>//<db-path>` | Jaybird JDBC URL |
 | `FIREBIRD_USER` | `sysdba` | Database user |
 | `FIREBIRD_PASSWORD` | `masterkey` | Database credential |
 | `FIREBIRD_MONITORING_INTERVAL` | `30s` | MON$ gauge collection interval (ISO-8601 or `Ns`) |
@@ -88,7 +88,7 @@ docker build -f src/main/docker/Dockerfile.jvm \
 
 # Run container
 docker run -p 8080:8080 \
-  -e FIREBIRD_JDBC_URL="jdbc:firebird://db-host:3050//data/mydb.fdb" \
+  -e FIREBIRD_JDBC_URL="jdbc:firebird://<replace-with-host>:<replace-with-port>//<replace-with-db-path>" \
   -e FIREBIRD_USER=sysdba \
   -e FIREBIRD_PASSWORD=secret \
   wolfgangreder/at.or.reder.firebird-monitoring:latest

@@ -4,7 +4,7 @@ metadata:
   name: firebirdsql-monitoring
   namespace: <replace-with-namespace>
 data:
-  FIREBIRD_JDBC_URL: "jdbc:firebird://<replace-with-host>:3050//<replace-with-db-path>"
+  FIREBIRD_JDBC_URL: "jdbc:firebird://<replace-with-host>:<replace-with-port>//<replace-with-db-path>"
   FIREBIRD_USER: "<replace-with-db-user>"
   FIREBIRD_MONITORING_INTERVAL: "30s"
   # Section enable flags — set to "false" to disable a section
