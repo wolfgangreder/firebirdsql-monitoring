@@ -3,4 +3,4 @@ name: firebirdsql-monitoring
 description: Firebird SQL Prometheus exporter (Quarkus application)
 type: application
 version: 0.1.0
-appVersion: "1.0-SNAPSHOT"
+appVersion: "0.3.2"
