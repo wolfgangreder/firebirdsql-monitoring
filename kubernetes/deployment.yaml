@@ -28,12 +28,14 @@ spec:
                 name: firebirdsql-monitoring
             - secretRef:
                 name: firebirdsql-monitoring
+          # Probes never touch the database; DB state is exposed as the firebird_up metric.
           livenessProbe:
             httpGet:
               path: /q/health/live
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 3
             failureThreshold: 3
           readinessProbe:
             httpGet:
@@ -41,7 +43,15 @@ spec:
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
+            timeoutSeconds: 3
             failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /q/health/started
+              port: 8080
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
           resources:
             requests:
               memory: "256Mi"

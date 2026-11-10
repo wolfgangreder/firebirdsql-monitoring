@@ -29,22 +29,11 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+          # All non-secret settings come from the ConfigMap, so new keys need no template change.
+          envFrom:
+            - configMapRef:
+                name: {{ include "firebirdsql-monitoring.fullname" . }}
           env:
-            - name: FIREBIRD_JDBC_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "firebirdsql-monitoring.fullname" . }}
-                  key: FIREBIRD_JDBC_URL
-            - name: FIREBIRD_USER
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "firebirdsql-monitoring.fullname" . }}
-                  key: FIREBIRD_USER
-            - name: FIREBIRD_MONITORING_INTERVAL
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "firebirdsql-monitoring.fullname" . }}
-                  key: FIREBIRD_MONITORING_INTERVAL
             - name: FIREBIRD_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -54,5 +43,7 @@ spec:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

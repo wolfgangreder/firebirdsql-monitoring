@@ -8,7 +8,6 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
 
 /**
  * Integration tests for the monitoring application.
@@ -59,20 +58,33 @@ class MonitoringResourceTest {
     }
 
     @Test
-    void readinessProbeResponds() {
-        // Readiness includes the DB check; with no real Firebird it returns 503.
+    void readinessProbeIsUpEvenWhenDatabaseIsDown() {
+        // Readiness must not depend on the database; DB state is informational only.
         given()
                 .when().get("/q/health/ready")
                 .then()
-                .statusCode(anyOf(is(200), is(503)));
+                .statusCode(200)
+                .body("status", equalTo("UP"))
+                .body("checks.find { it.name == 'application' }.data.firebird", equalTo("DOWN"));
     }
 
     @Test
-    void healthRootResponds() {
+    void healthRootIsUpEvenWhenDatabaseIsDown() {
         given()
                 .when().get("/q/health")
                 .then()
-                .statusCode(anyOf(is(200), is(503)));
+                .statusCode(200)
+                .body("status", equalTo("UP"));
+    }
+
+    @Test
+    void metricsReportDatabaseDownAsFirebirdUpZero() {
+        given()
+                .when().get("/q/metrics")
+                .then()
+                .statusCode(200)
+                .body(containsString("firebird_up 0.0"))
+                .body(containsString("firebird_last_success_timestamp_seconds"));
     }
 
     // ------------------------------------------------------------------

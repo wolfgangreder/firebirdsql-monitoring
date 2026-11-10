@@ -32,6 +32,8 @@ Metrics: `http://localhost:8080/q/metrics`
 | `firebird_io_page_marks_pages` | Dirty pages |
 | `firebird_memory_used_bytes` | Memory in use |
 | `firebird_memory_allocated_bytes` | Memory allocated |
+| `firebird_up` | `1` if the database was reachable at the last check, `0` if not (alert on this) |
+| `firebird_last_success_timestamp_seconds` | Unix time of the last successful connectivity check |
 
 Statistics metrics (`headerpage_*`, `data_*`, `index_*`) collected separately on a slower interval.
 
@@ -50,14 +52,20 @@ Statistics metrics (`headerpage_*`, `data_*`, `index_*`) collected separately on
 | `FIREBIRD_MONITORING_MEMORY_ENABLED` | `true` | Collect memory stats |
 | `FIREBIRD_STATISTICS_ENABLED` | `true` | Collect DB statistics |
 | `FIREBIRD_STATISTICS_INTERVAL` | `1h` | Statistics scrape interval |
+| `FIREBIRD_SO_TIMEOUT_MS` | `10000` | JDBC socket read timeout (ms) |
+| `FIREBIRD_CONNECT_TIMEOUT_S` | `5` | JDBC connect timeout (s) |
+| `FIREBIRD_STATISTICS_SO_TIMEOUT` | `10m` | Statistics service socket timeout |
+| `FIREBIRD_STATISTICS_CONNECT_TIMEOUT` | `5s` | Statistics service connect timeout |
+| `FIREBIRD_WORKER_THREADS` | `20` | Max blocking worker threads |
 
 ## REST API
 
 | Path | Description |
 |---|---|
 | `GET /q/metrics` | Prometheus metrics |
-| `GET /q/health/live` | Liveness probe |
-| `GET /q/health/ready` | Readiness probe |
+| `GET /q/health/live` | Liveness probe (never touches the database) |
+| `GET /q/health/ready` | Readiness probe (independent of the database; DB state is shown as informational data and in `firebird_up`) |
+| `GET /q/health/started` | Startup probe |
 | `GET /monitoring/database` | DB info (JSON) |
 | `GET /monitoring/connections` | Active connections (JSON) |
 | `GET /monitoring/transactions` | Active transactions (JSON) |

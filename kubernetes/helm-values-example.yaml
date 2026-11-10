@@ -11,6 +11,21 @@ firebird:
   user: "<replace-with-db-user>"
   password: "<replace-with-password>"    # use --set firebird.password=... to avoid committing secrets
   monitoringInterval: "30s"
+  # Optional: network timeouts (defaults shown)
+  soTimeoutMs: 10000
+  connectTimeoutSeconds: 5
+  sections:                    # set false to disable a collection section
+    connections: true
+    transactions: true
+    statements: true
+    io: true
+    memory: true
+  statistics:
+    enabled: true
+    interval: "1h"
+    soTimeout: "10m"
+    connectTimeout: "5s"
+  workerThreads: 20
 
 ingress:
   enabled: true

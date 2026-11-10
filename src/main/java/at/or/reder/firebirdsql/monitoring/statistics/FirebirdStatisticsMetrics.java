@@ -58,7 +58,9 @@ public class FirebirdStatisticsMetrics {
      * Hourly collection trigger. Fetches statistics via {@code FBStatisticsManager} and
      * updates all gauges. Errors are logged and the cycle is skipped.
      */
-    @Scheduled(every = "${firebird.statistics.interval:1h}")
+    @Scheduled(every = "${firebird.statistics.interval:1h}",
+               identity = "firebird-statistics-collect",
+               concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void collectStatistics() {
         if (!statisticsEnabled) {
             return;

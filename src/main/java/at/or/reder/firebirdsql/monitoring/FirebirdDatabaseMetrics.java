@@ -145,7 +145,9 @@ public class FirebirdDatabaseMetrics {
     // Scheduled collection – only enabled sections query the DB
     // -------------------------------------------------------------------------
 
-    @Scheduled(every = "${firebird.monitoring.interval:30s}")
+    @Scheduled(every = "${firebird.monitoring.interval:30s}",
+               identity = "firebird-monitoring-collect",
+               concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void collectMetrics() {
         if (!connectionsEnabled && !transactionsEnabled && !statementsEnabled
                 && !ioEnabled && !memoryEnabled) {

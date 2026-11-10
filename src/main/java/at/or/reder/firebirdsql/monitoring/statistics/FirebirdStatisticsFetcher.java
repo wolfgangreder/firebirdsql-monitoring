@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -36,6 +37,16 @@ public class FirebirdStatisticsFetcher {
 
     @ConfigProperty(name = "quarkus.datasource.password")
     String password;
+
+    /**
+     * Maximum time without any server response. Generous by default because gstat output
+     * can take a long time to start on big databases; it only guards against a hung peer.
+     */
+    @ConfigProperty(name = "firebird.statistics.so-timeout", defaultValue = "PT10M")
+    Duration soTimeout;
+
+    @ConfigProperty(name = "firebird.statistics.connect-timeout", defaultValue = "PT5S")
+    Duration connectTimeout;
 
     // Package-private to allow direct inspection in tests.
     volatile FirebirdConnectionInfo connectionInfo;
@@ -85,6 +96,8 @@ public class FirebirdStatisticsFetcher {
         mgr.setServerName(connectionInfo.host());
         mgr.setPortNumber(connectionInfo.port());
         mgr.setDatabase(connectionInfo.database());
+        mgr.setSoTimeout((int) soTimeout.toMillis());
+        mgr.setConnectTimeout((int) connectTimeout.toSeconds());
         mgr.setLogger(bos);
         mgr.getDatabaseStatistics(
             StatisticsManager.DATA_TABLE_STATISTICS

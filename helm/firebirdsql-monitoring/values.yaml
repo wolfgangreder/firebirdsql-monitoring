@@ -30,6 +30,23 @@ firebird:
   # password: set via --set firebird.password=... or external Secret
   password: "CHANGEME"
   monitoringInterval: "30s"
+  # Network timeouts against hung/stale database connections.
+  # Without them a dead connection blocks threads forever.
+  soTimeoutMs: 10000            # JDBC socket read timeout (ms)
+  connectTimeoutSeconds: 5      # JDBC connect timeout (s)
+  # Collection sections (scheduled MON$ queries); set false to disable a section
+  sections:
+    connections: true
+    transactions: true
+    statements: true
+    io: true
+    memory: true
+  statistics:
+    enabled: true               # full DB statistics via service manager (expensive)
+    interval: "1h"
+    soTimeout: "10m"            # statistics service socket timeout (gstat output can start slowly)
+    connectTimeout: "5s"
+  workerThreads: 20             # max blocking worker threads
 
 resources:
   requests:
@@ -44,12 +61,16 @@ prometheus:
   path: /q/metrics
   port: "8080"
 
+# Probes never touch the database (a DB outage must not restart or unready the pod);
+# database state is exposed as the firebird_up metric. timeoutSeconds must be set explicitly:
+# the Kubernetes default of 1s is too tight for a JVM under a CPU limit.
 livenessProbe:
   httpGet:
     path: /q/health/live
     port: 8080
   initialDelaySeconds: 30
   periodSeconds: 10
+  timeoutSeconds: 3
   failureThreshold: 3
 
 readinessProbe:
@@ -58,4 +79,13 @@ readinessProbe:
     port: 8080
   initialDelaySeconds: 10
   periodSeconds: 5
+  timeoutSeconds: 3
   failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /q/health/started
+    port: 8080
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 12

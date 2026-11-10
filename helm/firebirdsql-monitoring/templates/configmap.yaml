@@ -8,3 +8,15 @@ data:
   FIREBIRD_JDBC_URL: {{ .Values.firebird.jdbcUrl | quote }}
   FIREBIRD_USER: {{ .Values.firebird.user | quote }}
   FIREBIRD_MONITORING_INTERVAL: {{ .Values.firebird.monitoringInterval | quote }}
+  FIREBIRD_SO_TIMEOUT_MS: {{ .Values.firebird.soTimeoutMs | quote }}
+  FIREBIRD_CONNECT_TIMEOUT_S: {{ .Values.firebird.connectTimeoutSeconds | quote }}
+  FIREBIRD_STATISTICS_SO_TIMEOUT: {{ .Values.firebird.statistics.soTimeout | quote }}
+  FIREBIRD_STATISTICS_CONNECT_TIMEOUT: {{ .Values.firebird.statistics.connectTimeout | quote }}
+  FIREBIRD_WORKER_THREADS: {{ .Values.firebird.workerThreads | quote }}
+  FIREBIRD_MONITORING_CONNECTIONS_ENABLED: {{ .Values.firebird.sections.connections | quote }}
+  FIREBIRD_MONITORING_TRANSACTIONS_ENABLED: {{ .Values.firebird.sections.transactions | quote }}
+  FIREBIRD_MONITORING_STATEMENTS_ENABLED: {{ .Values.firebird.sections.statements | quote }}
+  FIREBIRD_MONITORING_IO_ENABLED: {{ .Values.firebird.sections.io | quote }}
+  FIREBIRD_MONITORING_MEMORY_ENABLED: {{ .Values.firebird.sections.memory | quote }}
+  FIREBIRD_STATISTICS_ENABLED: {{ .Values.firebird.statistics.enabled | quote }}
+  FIREBIRD_STATISTICS_INTERVAL: {{ .Values.firebird.statistics.interval | quote }}

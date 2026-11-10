@@ -15,3 +15,9 @@ data:
   FIREBIRD_MONITORING_MEMORY_ENABLED: "true"
   FIREBIRD_STATISTICS_ENABLED: "true"
   FIREBIRD_STATISTICS_INTERVAL: "1h"
+  # Network timeouts against hung/stale database connections (optional)
+  FIREBIRD_SO_TIMEOUT_MS: "10000"          # JDBC socket read timeout in milliseconds
+  FIREBIRD_CONNECT_TIMEOUT_S: "5"          # JDBC connect timeout in seconds
+  FIREBIRD_STATISTICS_SO_TIMEOUT: "10m"    # statistics service socket timeout
+  FIREBIRD_STATISTICS_CONNECT_TIMEOUT: "5s"
+  FIREBIRD_WORKER_THREADS: "20"            # cap for blocking worker threads

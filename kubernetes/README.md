@@ -11,7 +11,15 @@ kubectl apply -f kubernetes/deployment.yaml
 ```
 
 Metrics endpoint: `http://<service>:8080/q/metrics`
-Health: `http://<service>:8080/q/health/live`
+Health: `http://<service>:8080/q/health/live`, `/q/health/ready`, `/q/health/started`
+
+### Health probes and database outages
+
+Probes never touch the database. A Firebird outage neither restarts nor unreadies the pod;
+it is reported by the `firebird_up` metric (`1` = reachable, `0` = down) and
+`firebird_last_success_timestamp_seconds`. Alert on it, e.g. `firebird_up == 0`.
+`timeoutSeconds` is set explicitly on all probes because the Kubernetes default (1s) is too
+tight for a JVM under a CPU limit.
 
 ### secret.yaml
 
@@ -36,6 +44,11 @@ Disable sections you don't need by setting the flag to `"false"`:
 | `FIREBIRD_MONITORING_MEMORY_ENABLED` | `true` | memory usage |
 | `FIREBIRD_STATISTICS_ENABLED` | `true` | full DB statistics (expensive) |
 | `FIREBIRD_STATISTICS_INTERVAL` | `1h` | statistics collection interval |
+| `FIREBIRD_SO_TIMEOUT_MS` | `10000` | JDBC socket read timeout (ms) — prevents threads hanging on dead connections |
+| `FIREBIRD_CONNECT_TIMEOUT_S` | `5` | JDBC connect timeout (s) |
+| `FIREBIRD_STATISTICS_SO_TIMEOUT` | `10m` | statistics service socket timeout |
+| `FIREBIRD_STATISTICS_CONNECT_TIMEOUT` | `5s` | statistics service connect timeout |
+| `FIREBIRD_WORKER_THREADS` | `20` | max blocking worker threads |
 
 ---
 
@@ -55,6 +68,12 @@ helm upgrade --install firebirdsql-monitoring helm/firebirdsql-monitoring \
 # uninstall
 helm uninstall firebirdsql-monitoring --namespace monitoring
 ```
+
+All settings from the tables above are Helm values: `firebird.monitoringInterval`,
+`firebird.sections.{connections,transactions,statements,io,memory}`,
+`firebird.statistics.{enabled,interval,soTimeout,connectTimeout}`, `firebird.soTimeoutMs`,
+`firebird.connectTimeoutSeconds`, `firebird.workerThreads` (see `helm/firebirdsql-monitoring/values.yaml`).
+Example: `--set firebird.sections.memory=false`.
 
 Pass `--set firebird.password=...` on the command line to avoid storing the password in a file.
 
